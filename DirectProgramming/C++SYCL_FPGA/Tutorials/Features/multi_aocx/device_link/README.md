@@ -1,13 +1,13 @@
-# Using the flows test 'multi_aocx'
+# Using the flows test 'device_link'
 
-This FPGA tutorial demonstrates the flows in multi_aocx
+This FPGA tutorial demonstrates the device link flow
 
 | Optimized for                     | Description
 |:---                               |:---
 | OS                                | Linux* Ubuntu* 18.04/20.04 <br> RHEL*/CentOS* 8 <br> SUSE* 15 <br> Windows* 10
 | Hardware                          | Intel&reg; Programmable Acceleration Card (PAC) with Intel Arria&reg; 10 GX FPGA <br> Intel&reg; FPGA Programmable Acceleration Card (PAC) D5005 (with Intel Stratix&reg; 10 SX) <br> Intel&reg; FPGA 3rd party / custom platforms with oneAPI support <br> **Note**: Intel&reg; FPGA PAC hardware is only compatible with Ubuntu 18.04*
 | Software                          | Intel® oneAPI DPC++/C++ Compiler
-| What you will learn               | How to use the `multi_aocx` flow tests to split kernels into multiple different images to split up compile time.
+| What you will learn               | How to use the `device_link` flow tests to parallelize the compiles of multiple images
 | Time to complete                  | 30 minutes
 
 > **Note**: Even though the Intel DPC++/C++ OneAPI compiler is enough to compile for emulation, generating reports and generating RTL, there are extra software requirements for the simulation flow and FPGA compiles.
@@ -21,75 +21,28 @@ This FPGA tutorial demonstrates the flows in multi_aocx
 
 ## Purpose
 
-`multi_aocx` could be used to split up your design into multiple images thus shorten the compilt time. Runtime automatically chooses between the images when user calls a specific function. It is useful for large designs.
-
-- `device_link` could be used to parallelize the individual compiles when users don't need to restructure their code. 
-- `-fsycl-device-code-split=[per_kernel|per_source]` flag could be used when a design doesn't fit a single FPGA, so user must split it into multiple smaller images.
-- `dynamic_link` could be used to load all libraries at runtime therefore generates smaller binary.
-- `dynamic_load` could be used to dynamically load only the libaries that's needed instead of all.
+`device_link` could be used to parallelize the individual compiles when users don't need to restructure their code. 
 
 ### Simple Code Example
 
-`device_link`:
 ```
 icpx ... vector_mul.cpp -fsycl-link=image -o mul.a
 icpx ... vector_add.cpp -fsycl-link=image -o add.a
 icpx ... main.cpp mul.a add.a -o main.exe
 ```
-`-fsycl-device-code-split=[per_kernel|per_source]`:
-```
-icpx ... simple.cpp -o simple.exe -fsycl-device-code-split=per_kernel
-icpx ... -reuse-exe=simple.exe -Xsv
-```
-`dynamic_link`:
-```
-icpx ... -fPIC -c vector_mul.cpp -o mul.o
-icpx ... -fPIC -shared mul.o -o mul.so
-icpx ... -fPIC -c vector_add.cpp -o add.o
-icpx ... -fPIC -shared add.o -o add.so
-icpx ... main.cpp mul.so add.so -o main.exe
-```
-`dynamic_load`:
-```
-icpx ... -fPIC -c vector_mul.cpp -o mul.o
-icpx ... -fPIC -shared mul.o -o mul.so
-icpx ... -fPIC -c vector_add.cpp -o add.o
-icpx ... -fPIC -shared add.o -o add.so
-icpx ... main.cpp -o main.exe
-```
 
 ### Using the multi-aocx flows
 
-`device_link`:
 - Only cpp (aocx) file that changed needs to be recompiled
 - Change to one cpp file requires recompile of executable
 - All aocxs are embedded in single executable binary, therefore not scalable
 - Recommended for small designs with few aocxs
 
-`-fsycl-device-code-split=[per_kernel|per_source]`:
-- Split a large design into smaller images
-  - `per_kernel` - a separate device code module is created for each SYCL kernel
-  - `per_source` - a separate device code module is created for each source
-- Users don't need to restructure their code 
-- All aocxs need to be recompiled if any code or target changed
-
-`dynamic_link`:
-- Only libraries that changed needs to be recompiled
-- Loads all libraries at runtime therefore generates a smaller binary
-- All libraries are loaded to memory therefore not scalable
-- Recommended for smaller designs with few aocxs
-
-`dynamic_load`:
-- Like dynamic_link BUT Load the shared lib with dlopen in host code to access
-- Only loaded libraries are in memory
-- Recommended for designs with many aocxs
-
-
 ## Key Concepts
 
 
 
-## Building the `multi_aocx` Tutorial
+## Building the `device_link` Tutorial
 
 > **Note**: If you have not already done so, set up your CLI
 > environment by sourcing  the `setvars` script located in
@@ -185,7 +138,7 @@ To learn more about the extensions and how to configure the oneAPI environment, 
      make fpga
      ```
 
-3. (Optional) As the earlier hardware compile can take several hours to complete, FPGA precompiled binaries (compatible with Ubuntu 18.04) can be downloaded [here](https://iotdk.intel.com/fpga-precompiled-binaries/latest/multi_aocx.fpga.tar.gz).
+3. (Optional) As the earlier hardware compile can take several hours to complete, FPGA precompiled binaries (compatible with Ubuntu 18.04) can be downloaded [here](https://iotdk.intel.com/fpga-precompiled-binaries/latest/device_link.fpga.tar.gz).
 
 ### On a Windows* System
 
@@ -253,81 +206,36 @@ For instructions, refer to [FPGA Workflows on Third-Party IDEs for Intel&reg; on
 
 Locate the pair of `report.html` files in either:
 
-- **Report-only compile**:  `multi_aocx_report.prj`
-- **FPGA hardware compile**: `multi_aocx.prj`
+- **Report-only compile**:  `device_link_report.prj`
+- **FPGA hardware compile**: `device_link.prj`
 
-Scroll down on the Summary page of the report and expand the section titled **Compile Estimated Kernel Resource Utilization Summary**. Observe how the kernel `ConstructFromACFixed` consumes fewer resources than the kernel named `ConstructFromFloat`. Similarly, observe how the kernel named `CalculateWithACFixed` consumes fewer FPGA resources than `CalculateWithFloat`.
 
 ## Running the Sample
 
 1. Run the sample on the FPGA emulator (the kernel executes on the CPU):
 
    ```bash
-   ./multi_aocx.fpga_emu    (Linux)
-   multi_aocx.fpga_emu.exe  (Windows)
+   ./device_link.fpga_emu    (Linux)
+   device_link.fpga_emu.exe  (Windows)
    ```
 
 2. Run the sample of the FPGA simulator device
 
    ```bash
-   ./multi_aocx.fpga_sim        (Linux)
-   multi_aocx.fpga_sim.exe      (Windows)
+   ./device_link.fpga_sim        (Linux)
+   device_link.fpga_sim.exe      (Windows)
    ```
 
 3. Run the sample on the FPGA device
 
    ```bash
-   ./multi_aocx.fpga             (Linux)
-   multi_aocx.fpga.exe           (Windows)
+   ./device_link.fpga             (Linux)
+   device_link.fpga.exe           (Windows)
    ```
 
 ### Example of Output on Emulator
 
-```txt
-1. Testing Constructing multi_aocx from float or multi_aocx:
-Constructed from float:         3.6416015625
-Constructed from multi_aocx:      3.6416015625
-
-2. Testing calculation with float or multi_aocx math functions:
-MAX DIFF (quantum) for multi_aocx<10, 3, true>:   0.0078125
-MAX DIFF for float:                             9.53674e-07
-
-Input 0:                        -0.80799192
-result(fixed point):            1
-difference(fixed point):        0
-result(float):                  1
-difference(float):              0
-
-Input 1:                        -2.099829
-result(fixed point):            0.9921875
-difference(fixed point):        0.0078125
-result(float):                  0.99999994
-difference(float):              5.9604645e-08
-
-Input 2:                        -0.74206626
-result(fixed point):            1
-difference(fixed point):        0
-result(float):                  1
-difference(float):              0
-
-Input 3:                        -2.3321707
-result(fixed point):            1
-difference(fixed point):        0
-result(float):                  1
-difference(float):              0
-
-Input 4:                        1.1432415
-result(fixed point):            0.9921875
-difference(fixed point):        0.0078125
-result(float):                  0.99999994
-difference(float):              5.9604645e-08
-
-PASSED: all kernel results are correct.
-```
-
 ### Discussion of Results
-
-You can obtain a smaller hardware footprint for your kernel by ensuring that the `multi_aocx` numbers are constructed from `float` or `double` numbers outside the kernel. Additionally, by using the `multi_aocx` types and math library functions, you can use an even smaller fixed point format to trade-off even more accuracy for a more resource efficient design if your application requirements allow for it.
 
 ## License
 

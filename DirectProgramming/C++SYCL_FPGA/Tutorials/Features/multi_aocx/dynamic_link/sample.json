@@ -1,8 +1,8 @@
 {
-  "guid": "A91E6C3E-5A2C-4C91-8FDD-8022954DEDCA",
-  "name": "AC Fixed",
+  "guid": "B9BF29C5-26AB-4D6C-A9A0-FB36D37D2929",
+  "name": "dynamic_link",
   "categories": ["Toolkit/oneAPI Direct Programming/C++SYCL FPGA/Tutorials/Features"],
-  "description": "An Intel® FPGA tutorial demonstrating how to use the flows in multi_aocx ",
+  "description": "An Intel® FPGA tutorial demonstrating how to use dynamic_link ",
   "toolchain": ["icpx"],
   "os": ["linux", "windows"],
   "targetDevice": ["FPGA"],
@@ -12,7 +12,7 @@
     "base": "../../..",
     "include": [
       "README.md",
-      "Tutorials/Features/multi_aocx",
+      "Tutorials/Features/multi_aocx/dynamic_link",
       "include"
     ],
     "exclude": []
@@ -27,7 +27,7 @@
           "cd build",
           "cmake ..",
           "make fpga_emu",
-          "./multi_aocx.fpga_emu"
+          "./dynamic_link.fpga_emu"
         ]
       },
       {
@@ -49,9 +49,9 @@
           "cd ../../..",
           "mkdir build",
           "cd build",
-          "cmake -G \"NMake Makefiles\" ../Tutorials/Features/multi_aocx",
+          "cmake -G \"NMake Makefiles\" ../Tutorials/Features/multi_aocx/dynamic_link",
           "nmake fpga_emu",
-          "multi_aocx.fpga_emu.exe"
+          "dynamic_link.fpga_emu.exe"
         ]
       },
       {
@@ -61,7 +61,7 @@
           "cd ../../..",
           "mkdir build",
           "cd build",
-          "cmake -G \"NMake Makefiles\" ../Tutorials/Features/multi_aocx",
+          "cmake -G \"NMake Makefiles\" ../Tutorials/Features/multi_aocx/dynamic_link",
           "nmake report"
         ]
       }
