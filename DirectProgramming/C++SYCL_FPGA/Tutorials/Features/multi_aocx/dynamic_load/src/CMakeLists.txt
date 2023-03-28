@@ -57,8 +57,6 @@ add_custom_target(fpga_emu DEPENDS ${EMULATOR_TARGET})
 #   icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -Xshardware -Xstarget=<FPGA_DEVICE> -fsycl-link=early main.cpp mul.a add.a -o dynamic_load_report.a
 set(FPGA_EARLY_IMAGE ${TARGET_NAME}_report.a)
 # The compile output is not an executable, but an intermediate compilation result unique to SYCL.
-add_library(library_add SHARED ${SOURCE_FILE_ADD})
-add_library(library_mul SHARED ${SOURCE_FILE_MUL})
 set_target_properties(library_add PROPERTIES COMPILE_FLAGS "${EMULATOR_COMPILE_FLAGS} -fPIC")
 set_target_properties(library_add PROPERTIES LINK_FLAGS "${EMULATOR_LINK_FLAGS} -fPIC")
 set_target_properties(library_mul PROPERTIES COMPILE_FLAGS "${EMULATOR_COMPILE_FLAGS} -fPIC")
@@ -79,8 +77,6 @@ set_target_properties(${FPGA_EARLY_IMAGE} PROPERTIES LINK_FLAGS "${EMULATOR_LINK
 #    [link] icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -Xssimulation -Xsghdl -Xstarget=<FPGA_DEVICE> -fPIC -shared vector_mul.o -o mul.so
 #    [compile] icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -DFPGA_SIMULATOR -o main.cpp.o -c main.cpp
 #    [link]    icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -Xssimulation -Xsghdl -Xstarget=<FPGA_DEVICE> main.cpp.o -o main.fpga_emu
-add_library(library_add SHARED ${SOURCE_FILE_ADD})
-add_library(library_mul SHARED ${SOURCE_FILE_MUL})
 set_target_properties(library_add PROPERTIES COMPILE_FLAGS "${SIMULATOR_COMPILE_FLAGS} -fPIC")
 set_target_properties(library_add PROPERTIES LINK_FLAGS "${SIMULATOR_LINK_FLAGS} -fPIC")
 set_target_properties(library_mul PROPERTIES COMPILE_FLAGS "${SIMULATOR_COMPILE_FLAGS} -fPIC")
@@ -103,8 +99,6 @@ add_custom_target(fpga_sim DEPENDS ${SIMULATOR_TARGET})
 #    [link] icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -Xshardware -Xstarget=<FPGA_DEVICE> -fPIC -shared vector_mul.o -o mul.so
 #    [compile] icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -o main.cpp.o -c main.cpp
 #    [link]    icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -Xshardware -Xstarget=<FPGA_DEVICE> main.cpp.o -o main.fpga_emu
-add_library(library_add SHARED ${SOURCE_FILE_ADD})
-add_library(library_mul SHARED ${SOURCE_FILE_MUL})
 set_target_properties(library_add PROPERTIES COMPILE_FLAGS "${HARDWARE_COMPILE_FLAGS} -fPIC")
 set_target_properties(library_add PROPERTIES LINK_FLAGS "${HARDWARE_LINK_FLAGS} -fPIC")
 set_target_properties(library_mul PROPERTIES COMPILE_FLAGS "${HARDWARE_COMPILE_FLAGS} -fPIC")

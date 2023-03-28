@@ -11,13 +11,10 @@ endif()
 
 cmake_minimum_required (VERSION 3.4)
 
-project(MultiAOCX CXX)
+project(device_code_split CXX)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-add_subdirectory (device_link)
-add_subdirectory (device_code_split)
-add_subdirectory (dynamic_link)
-add_subdirectory (dynamic_load)
+add_subdirectory (src)

@@ -1,4 +1,4 @@
-#include "TestConfigSelector.h"
+#include "test_config_selector.hpp"
 #include <sycl/sycl.hpp>
 #include <iostream>
 

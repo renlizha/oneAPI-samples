@@ -7,8 +7,9 @@
 #include <array>
 #include <iostream>
 
-#include "ExceptionHandler.h"
-#include "TestConfigSelector.h"
+#include <sycl/ext/intel/fpga_extensions.hpp>
+#include "exception_handler.hpp"
+#include "test_config_selector.hpp"
 #include "vector_ops.h"
 
 using namespace sycl;
@@ -44,7 +45,7 @@ int main() {
 
   initialize_array(addend_2);
 
-  queue devq(testconfig_selector_v, &m_exception_handler);
+  queue devq(testconfig_selector_v, &exception_handler);
 
   for (int iter = 0; iter < max_iterations; iter++) {
 

@@ -5,7 +5,6 @@
 // =============================================================
 #include <sycl/sycl.hpp>
 #include <array>
-#include <dlfcn.h>
 #include <iostream>
 
 #include "exception_handler.hpp"
@@ -47,39 +46,13 @@ int main() {
 
   queue devq(testconfig_selector_v, &m_exception_handler);
 
-  void (*vector_add)(queue, const IntArray &, const IntArray &, IntArray &);
-  void (*vector_mul)(queue, const IntArray &, const IntArray &, IntArray &);
-  void *library_add = dlopen("./vector_add.so", RTLD_NOW);
-  if (library_add == NULL) {
-    fprintf(stderr, "Unable to open vector_add library: %s\n", dlerror());
-    exit(1);
-  }
-
-  vector_add = (void (*)(queue, const IntArray &, const IntArray &,
-                         IntArray &))dlsym(library_add, "VectorAddInDPCPP");
-  if (vector_add == NULL) {
-    fprintf(stderr, "Failed to load vector add %s\n", dlerror());
-    exit(1);
-  }
-  void *library_mul = dlopen("./vector_mul.so", RTLD_NOW);
-  if (library_mul == NULL) {
-    fprintf(stderr, "Unable to open vector_mul library: %s\n", dlerror());
-    exit(1);
-  }
-  vector_mul = (void (*)(queue, const IntArray &, const IntArray &,
-                         IntArray &))dlsym(library_mul, "VectorMulInDPCPP");
-  if (vector_mul == NULL) {
-    fprintf(stderr, "Failed to load vector mul %s\n", dlerror());
-    exit(1);
-  }
-
   // std::cout << "Device: " << devq.get_device().get_info<sycl::info::device::name>()
   //          << std::endl;
   for (int iter = 0; iter < max_iterations; iter++) {
 
     // Compute vector addition in DPC++
-    vector_add(devq, addend_1, addend_2, parallel);
-    vector_mul(devq, addend_1, addend_2, parallel);
+    VectorAddInDPCPP(devq, addend_1, addend_2, parallel);
+    VectorMulInDPCPP(devq, addend_1, addend_2, parallel);
 
     // Computes the sum of two arrays in scalar for validation
     for (size_t i = 0; i < scalar.size(); i++)

@@ -31,7 +31,7 @@ icpx ... vector_add.cpp -fsycl-link=image -o add.a
 icpx ... main.cpp mul.a add.a -o main.exe
 ```
 
-### Using the multi-aocx flows
+### Using the device_link flows
 
 - Only cpp (aocx) file that changed needs to be recompiled
 - Change to one cpp file requires recompile of executable
