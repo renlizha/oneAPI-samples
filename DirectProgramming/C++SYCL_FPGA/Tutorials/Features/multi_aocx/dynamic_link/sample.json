@@ -1,7 +1,7 @@
 {
   "guid": "B9BF29C5-26AB-4D6C-A9A0-FB36D37D2929",
   "name": "dynamic_link",
-  "categories": ["Toolkit/oneAPI Direct Programming/C++SYCL FPGA/Tutorials/Features"],
+  "categories": ["Toolkit/oneAPI Direct Programming/C++SYCL FPGA/Tutorials/Features/multi_aocx"],
   "description": "An Intel® FPGA tutorial demonstrating how to use dynamic_link ",
   "toolchain": ["icpx"],
   "os": ["linux", "windows"],
@@ -9,7 +9,7 @@
   "builder": ["ide", "cmake"],
   "languages": [{"cpp":{}}],
   "commonFolder": {
-    "base": "../../..",
+    "base": "../../../..",
     "include": [
       "README.md",
       "Tutorials/Features/multi_aocx/dynamic_link",
@@ -46,7 +46,7 @@
         "id": "fpga_emu",
         "steps": [
           "icpx --version",
-          "cd ../../..",
+          "cd ../../../..",
           "mkdir build",
           "cd build",
           "cmake -G \"NMake Makefiles\" ../Tutorials/Features/multi_aocx/dynamic_link",
@@ -58,7 +58,7 @@
         "id": "report",
         "steps": [
           "icpx --version",
-          "cd ../../..",
+          "cd ../../../..",
           "mkdir build",
           "cd build",
           "cmake -G \"NMake Makefiles\" ../Tutorials/Features/multi_aocx/dynamic_link",

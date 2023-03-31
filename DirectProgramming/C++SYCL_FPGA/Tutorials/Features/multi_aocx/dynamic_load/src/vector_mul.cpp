@@ -3,6 +3,7 @@
 class SimpleVmul;
 using namespace sycl;
 
+extern "C" {
 void VectorMulInDPCPP(queue q, const IntArray &addend_1,
                       const IntArray &addend_2, IntArray &sum_parallel) {
   // print out the device information used for the kernel code
@@ -38,7 +39,7 @@ void VectorMulInDPCPP(queue q, const IntArray &addend_1,
     //    work item. the parameter of the lambda is the work item id of the
     //    current item.
     // DPC++ supports unnamed lambda kernel by default.
-    h.parallel_for<SimpleVmul>(num_items, [=](id<1> i) {
+    h.parallel_for<class SimpleVmul>(num_items, [=](id<1> i) {
       mul_accessor[i] += addend_1_accessor[i] * addend_2_accessor[i];
     });
   });
@@ -46,4 +47,5 @@ void VectorMulInDPCPP(queue q, const IntArray &addend_1,
   // q.submit() is an asynchronously call. DPC++ runtime enqueues and runs the
   // kernel asynchronously. at the end of the DPC++ scope the buffer's data is
   // copied back to the host.
+}
 }

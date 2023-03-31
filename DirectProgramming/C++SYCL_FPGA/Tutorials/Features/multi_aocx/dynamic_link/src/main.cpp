@@ -4,11 +4,11 @@
 // SPDX-License-Identifier: MIT
 // =============================================================
 #include <sycl/sycl.hpp>
+#include <sycl/ext/intel/fpga_extensions.hpp>
 #include <array>
 #include <iostream>
 
 #include "exception_handler.hpp"
-#include "test_config_selector.hpp"
 #include "vector_ops.h"
 
 using namespace sycl;
@@ -44,7 +44,15 @@ int main() {
 
   initialize_array(addend_2);
 
-  queue devq(testconfig_selector_v, &m_exception_handler);
+#if FPGA_SIMULATOR
+    auto selector = sycl::ext::intel::fpga_simulator_selector_v;
+#elif FPGA_HARDWARE
+    auto selector = sycl::ext::intel::fpga_selector_v;
+#else // #if FPGA_EMULATOR
+    auto selector = sycl::ext::intel::fpga_emulator_selector_v;
+#endif
+
+  queue devq(selector, fpga_tools::exception_handler);
 
   // std::cout << "Device: " << devq.get_device().get_info<sycl::info::device::name>()
   //          << std::endl;
@@ -67,7 +75,7 @@ int main() {
     }
   }
 
-  std::cout << "success" << std::endl;
+  std::cout << "PASSED: The results are correct" << std::endl;
 
   return 0;
 }

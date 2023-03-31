@@ -14,10 +14,12 @@ constexpr access::mode dp_read = access::mode::read;
 constexpr access::mode dp_write = access::mode::write;
 constexpr access::mode dp_read_write = access::mode::read_write;
 
-void VectorAddInDPCPP(queue q, const IntArray &addend_1,
-                      const IntArray &addend_2, IntArray &sum_parallel);
+extern "C" void VectorAddInDPCPP(queue q, const IntArray &addend_1,
+                                 const IntArray &addend_2,
+                                 IntArray &sum_parallel);
 
-void VectorMulInDPCPP(queue q, const IntArray &addend_1,
-                      const IntArray &addend_2, IntArray &sum_parallel);
+extern "C" void VectorMulInDPCPP(queue q, const IntArray &addend_1,
+                                 const IntArray &addend_2,
+                                 IntArray &sum_parallel);
 
 #endif

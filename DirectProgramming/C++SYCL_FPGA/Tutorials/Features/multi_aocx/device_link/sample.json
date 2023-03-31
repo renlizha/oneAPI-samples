@@ -9,7 +9,7 @@
   "builder": ["ide", "cmake"],
   "languages": [{"cpp":{}}],
   "commonFolder": {
-    "base": "../../..",
+    "base": "../../../..",
     "include": [
       "README.md",
       "Tutorials/Features/multi_aocx/device_link",
@@ -46,7 +46,7 @@
         "id": "fpga_emu",
         "steps": [
           "icpx --version",
-          "cd ../../..",
+          "cd ../../../..",
           "mkdir build",
           "cd build",
           "cmake -G \"NMake Makefiles\" ../Tutorials/Features/multi_aocx/device_link",
@@ -58,10 +58,10 @@
         "id": "report",
         "steps": [
           "icpx --version",
-          "cd ../../..",
+          "cd ../../../..",
           "mkdir build",
           "cd build",
-          "cmake -G \"NMake Makefiles\" ../Tutorials/Features/device_link",
+          "cmake -G \"NMake Makefiles\" ../Tutorials/Features/multi_aocx/device_link",
           "nmake report"
         ]
       }

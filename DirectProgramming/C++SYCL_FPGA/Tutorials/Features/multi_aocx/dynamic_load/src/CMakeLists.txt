@@ -20,32 +20,39 @@ endif()
 # 1. The "compile" stage compiles the device code to an intermediate representation (SPIR-V).
 # 2. The "link" stage invokes the compiler's FPGA backend before linking.
 #    For this reason, FPGA backend flags must be passed as link flags in CMake.
-set(EMULATOR_COMPILE_FLAGS "-fsycl -fintelfpga ${AC_TYPES_FLAG} -DFPGA_EMULATOR -Wall ${WIN_FLAG}")
-set(EMULATOR_LINK_FLAGS "-fsycl -fintelfpga ${AC_TYPES_FLAG}")
-set(SIMULATOR_COMPILE_FLAGS "-fsycl -fintelfpga ${AC_TYPES_FLAG} -DFPGA_SIMULATOR -Wall ${WIN_FLAG}")
-set(SIMULATOR_LINK_FLAGS "-fsycl -fintelfpga ${AC_TYPES_FLAG} -Xssimulation -Xsghdl -Xstarget=${FPGA_DEVICE} ${USER_HARDWARE_FLAGS}")
-set(HARDWARE_COMPILE_FLAGS "-fsycl -fintelfpga ${AC_TYPES_FLAG} -Wall ${WIN_FLAG}")
-set(HARDWARE_LINK_FLAGS "-fsycl -fintelfpga ${AC_TYPES_FLAG} -Xshardware -Xstarget=${FPGA_DEVICE} ${USER_HARDWARE_FLAGS}")
+set(EMULATOR_COMPILE_FLAGS "-fsycl -fintelfpga -DFPGA_EMULATOR")
+set(EMULATOR_LINK_FLAGS "-fsycl -fintelfpga")
+set(SIMULATOR_COMPILE_FLAGS "-fsycl -fintelfpga -DFPGA_SIMULATOR")
+set(SIMULATOR_LINK_FLAGS "-fsycl -fintelfpga -Xssimulation -Xsghdl -Xstarget=${FPGA_DEVICE} ${USER_HARDWARE_FLAGS}")
+set(HARDWARE_COMPILE_FLAGS "-fsycl -fintelfpga")
+set(HARDWARE_LINK_FLAGS "-fsycl -fintelfpga -Xshardware -Xstarget=${FPGA_DEVICE} ${USER_HARDWARE_FLAGS}")
 # use cmake -D USER_HARDWARE_FLAGS=<flags> to set extra flags for FPGA backend compilation
 
 ###############################################################################
 ### FPGA Emulator
 ###############################################################################
 # CMake executes:
-#    [compile] icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -DFPGA_EMULATOR -fPIC -o vector_add.o -c vector_add.cpp
-#    [link] icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -DFPGA_EMULATOR -fPIC vector_add.o -o add.so
-#    [compile] icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -DFPGA_EMULATOR -fPIC -o vector_mul.o -c vector_mul.cpp
-#    [link] icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -DFPGA_EMULATOR -fPIC vector_mul.o -o mul.so
-#    [compile] icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -DFPGA_EMULATOR -o main.cpp.o -c main.cpp
-#    [link]    icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} main.cpp.o -o main.fpga_emu
-add_library(library_add SHARED ${SOURCE_FILE_ADD})
-add_library(library_mul SHARED ${SOURCE_FILE_MUL})
+#    [compile] icpx -fsycl -fintelfpga -fPIC -o vector_add.o -c vector_add.cpp
+#    [compile] icpx -fsycl -fintelfpga -shared -fPIC vector_add.o -o vector_add.so
+#    [compile] icpx -fsycl -fintelfpga -fPIC -o vector_mul.o -c vector_mul.cpp
+#    [compile] icpx -fsycl -fintelfpga -shared -fPIC vector_mul.o -o vector_mul.so
+#    [compile] icpx -fsycl -DFPGA_EMULATOR -o main.cpp.o -c main.cpp
+#    [link]    icpx -fsycl main.cpp.o -o main.fpga_emu
+add_library(add_object OBJECT ${SOURCE_FILE_ADD})
+add_library(mul_object OBJECT ${SOURCE_FILE_MUL})
+set_target_properties(add_object PROPERTIES COMPILE_FLAGS "-fsycl -fintelfpga -fPIC")
+set_target_properties(add_object PROPERTIES LINK_FLAGS "-fsycl -fintelfpga -fPIC")
+set_target_properties(mul_object PROPERTIES COMPILE_FLAGS "-fsycl -fintelfpga -fPIC")
+set_target_properties(mul_object PROPERTIES LINK_FLAGS "-fsycl -fintelfpga -fPIC")
+
+add_library(library_add SHARED $<TARGET_OBJECTS:add_object>)
+add_library(library_mul SHARED $<TARGET_OBJECTS:mul_object>)
 set_target_properties(library_add PROPERTIES COMPILE_FLAGS "${EMULATOR_COMPILE_FLAGS} -fPIC")
-set_target_properties(library_add PROPERTIES LINK_FLAGS "${EMULATOR_LINK_FLAGS} -fPIC")
+set_target_properties(library_add PROPERTIES LINK_FLAGS "${EMULATOR_LINK_FLAGS} -fPIC -shared")
 set_target_properties(library_mul PROPERTIES COMPILE_FLAGS "${EMULATOR_COMPILE_FLAGS} -fPIC")
-set_target_properties(library_mul PROPERTIES LINK_FLAGS "${EMULATOR_LINK_FLAGS} -fPIC")
+set_target_properties(library_mul PROPERTIES LINK_FLAGS "${EMULATOR_LINK_FLAGS} -fPIC -shared")
 add_executable(${EMULATOR_TARGET} ${SOURCE_FILE_MAIN})
-target_include_directories(${EMULATOR_TARGET} PRIVATE ../../../../include)
+target_include_directories(${EMULATOR_TARGET} PRIVATE ../../../../../include)
 set_target_properties(${EMULATOR_TARGET} PROPERTIES COMPILE_FLAGS "${EMULATOR_COMPILE_FLAGS}")
 set_target_properties(${EMULATOR_TARGET} PROPERTIES LINK_FLAGS "${EMULATOR_LINK_FLAGS}")
 add_custom_target(fpga_emu DEPENDS ${EMULATOR_TARGET})
@@ -54,15 +61,16 @@ add_custom_target(fpga_emu DEPENDS ${EMULATOR_TARGET})
 ### Generate Report
 ###############################################################################
 # To compile manually:
-#   icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -Xshardware -Xstarget=<FPGA_DEVICE> -fsycl-link=early main.cpp mul.a add.a -o dynamic_load_report.a
+#   icpx -fsycl -fintelfpga -Xshardware -Xstarget=<FPGA_DEVICE> -fsycl-link=early main.cpp mul.a add.a -o dynamic_load_report.a
 set(FPGA_EARLY_IMAGE ${TARGET_NAME}_report.a)
 # The compile output is not an executable, but an intermediate compilation result unique to SYCL.
 set_target_properties(library_add PROPERTIES COMPILE_FLAGS "${EMULATOR_COMPILE_FLAGS} -fPIC")
-set_target_properties(library_add PROPERTIES LINK_FLAGS "${EMULATOR_LINK_FLAGS} -fPIC")
+set_target_properties(library_add PROPERTIES LINK_FLAGS "${EMULATOR_LINK_FLAGS} -fPIC -shared")
 set_target_properties(library_mul PROPERTIES COMPILE_FLAGS "${EMULATOR_COMPILE_FLAGS} -fPIC")
-set_target_properties(library_mul PROPERTIES LINK_FLAGS "${EMULATOR_LINK_FLAGS} -fPIC")
+set_target_properties(library_mul PROPERTIES LINK_FLAGS "${EMULATOR_LINK_FLAGS} -fPIC -shared")
 add_executable(${FPGA_EARLY_IMAGE} ${SOURCE_FILE_MAIN})
-target_include_directories(${FPGA_EARLY_IMAGE} PRIVATE ../../../../include)
+target_include_directories(${FPGA_EARLY_IMAGE} PRIVATE ../../../../../include)
+add_custom_target(report DEPENDS ${FPGA_EARLY_IMAGE})
 set_target_properties(${FPGA_EARLY_IMAGE} PROPERTIES COMPILE_FLAGS "${EMULATOR_COMPILE_FLAGS}")
 set_target_properties(${FPGA_EARLY_IMAGE} PROPERTIES LINK_FLAGS "${EMULATOR_LINK_FLAGS} -fsycl-link=early")
 # fsycl-link=early stops the compiler after RTL generation, before invoking Quartus®
@@ -71,18 +79,18 @@ set_target_properties(${FPGA_EARLY_IMAGE} PROPERTIES LINK_FLAGS "${EMULATOR_LINK
 ### FPGA Simulator
 ###############################################################################
 # CMake executes:
-#    [compile] icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -DFPGA_SIMULATOR -fPIC -o vector_add.o -c vector_add.cpp
-#    [link] icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -Xssimulation -Xsghdl -Xstarget=<FPGA_DEVICE> -fPIC -shared vector_add.o -o add.so
-#    [compile] icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -DFPGA_SIMULATOR fPIC -o vector_mul.o -c vector_mul.cpp
-#    [link] icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -Xssimulation -Xsghdl -Xstarget=<FPGA_DEVICE> -fPIC -shared vector_mul.o -o mul.so
-#    [compile] icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -DFPGA_SIMULATOR -o main.cpp.o -c main.cpp
-#    [link]    icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -Xssimulation -Xsghdl -Xstarget=<FPGA_DEVICE> main.cpp.o -o main.fpga_emu
+#    [compile] icpx -fsycl -fintelfpga -DFPGA_SIMULATOR -fPIC -o vector_add.o -c vector_add.cpp
+#    [link] icpx -fsycl -fintelfpga -Xssimulation -Xsghdl -Xstarget=<FPGA_DEVICE> -fPIC -shared vector_add.o -o add.so
+#    [compile] icpx -fsycl -fintelfpga -DFPGA_SIMULATOR fPIC -o vector_mul.o -c vector_mul.cpp
+#    [link] icpx -fsycl -fintelfpga -Xssimulation -Xsghdl -Xstarget=<FPGA_DEVICE> -fPIC -shared vector_mul.o -o mul.so
+#    [compile] icpx -fsycl -fintelfpga -DFPGA_SIMULATOR -o main.cpp.o -c main.cpp
+#    [link]    icpx -fsycl -fintelfpga -Xssimulation -Xsghdl -Xstarget=<FPGA_DEVICE> main.cpp.o -o main.fpga_emu
 set_target_properties(library_add PROPERTIES COMPILE_FLAGS "${SIMULATOR_COMPILE_FLAGS} -fPIC")
-set_target_properties(library_add PROPERTIES LINK_FLAGS "${SIMULATOR_LINK_FLAGS} -fPIC")
+set_target_properties(library_add PROPERTIES LINK_FLAGS "${SIMULATOR_LINK_FLAGS} -fPIC -shared")
 set_target_properties(library_mul PROPERTIES COMPILE_FLAGS "${SIMULATOR_COMPILE_FLAGS} -fPIC")
-set_target_properties(library_mul PROPERTIES LINK_FLAGS "${SIMULATOR_LINK_FLAGS} -fPIC")
+set_target_properties(library_mul PROPERTIES LINK_FLAGS "${SIMULATOR_LINK_FLAGS} -fPIC -shared")
 add_executable(${SIMULATOR_TARGET} ${SOURCE_FILE_MAIN})
-target_include_directories(${SIMULATOR_TARGET} PRIVATE ../../../../include)
+target_include_directories(${SIMULATOR_TARGET} PRIVATE ../../../../../include)
 set_target_properties(${SIMULATOR_TARGET} PROPERTIES COMPILE_FLAGS "${SIMULATOR_COMPILE_FLAGS}")
 set_target_properties(${SIMULATOR_TARGET} PROPERTIES LINK_FLAGS "${SIMULATOR_LINK_FLAGS} -reuse-exe=${CMAKE_BINARY_DIR}/${SIMULATOR_TARGET}")
 # The -reuse-exe flag enables rapid recompilation of host-only code changes.
@@ -93,18 +101,18 @@ add_custom_target(fpga_sim DEPENDS ${SIMULATOR_TARGET})
 ### FPGA Hardware
 ###############################################################################
 # CMake executes:
-#    [compile] icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -fPIC -o vector_add.o -c vector_add.cpp
-#    [link] icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -Xshardware -Xstarget=<FPGA_DEVICE> -fPIC -shared vector_add.o -o add.so
-#    [compile] icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -fPIC -o vector_mul.o -c vector_mul.cpp
-#    [link] icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -Xshardware -Xstarget=<FPGA_DEVICE> -fPIC -shared vector_mul.o -o mul.so
-#    [compile] icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -o main.cpp.o -c main.cpp
-#    [link]    icpx -fsycl -fintelfpga ${AC_TYPES_FLAG} -Xshardware -Xstarget=<FPGA_DEVICE> main.cpp.o -o main.fpga_emu
+#    [compile] icpx -fsycl -fintelfpga -fPIC -o vector_add.o -c vector_add.cpp
+#    [link] icpx -fsycl -fintelfpga -Xshardware -Xstarget=<FPGA_DEVICE> -fPIC -shared vector_add.o -o add.so
+#    [compile] icpx -fsycl -fintelfpga -fPIC -o vector_mul.o -c vector_mul.cpp
+#    [link] icpx -fsycl -fintelfpga -Xshardware -Xstarget=<FPGA_DEVICE> -fPIC -shared vector_mul.o -o mul.so
+#    [compile] icpx -fsycl -fintelfpga -o main.cpp.o -c main.cpp
+#    [link]    icpx -fsycl -fintelfpga -Xshardware -Xstarget=<FPGA_DEVICE> main.cpp.o -o main.fpga_emu
 set_target_properties(library_add PROPERTIES COMPILE_FLAGS "${HARDWARE_COMPILE_FLAGS} -fPIC")
-set_target_properties(library_add PROPERTIES LINK_FLAGS "${HARDWARE_LINK_FLAGS} -fPIC")
+set_target_properties(library_add PROPERTIES LINK_FLAGS "${HARDWARE_LINK_FLAGS} -fPIC -shared")
 set_target_properties(library_mul PROPERTIES COMPILE_FLAGS "${HARDWARE_COMPILE_FLAGS} -fPIC")
-set_target_properties(library_mul PROPERTIES LINK_FLAGS "${HARDWARE_LINK_FLAGS} -fPIC")
+set_target_properties(library_mul PROPERTIES LINK_FLAGS "${HARDWARE_LINK_FLAGS} -fPIC -shared")
 add_executable(${FPGA_TARGET} ${SOURCE_FILE_MAIN})
-target_include_directories(${FPGA_TARGET} PRIVATE ../../../../include)
+target_include_directories(${FPGA_TARGET} PRIVATE ../../../../../include)
 set_target_properties(${FPGA_TARGET} PROPERTIES COMPILE_FLAGS "${HARDWARE_COMPILE_FLAGS}")
 set_target_properties(${FPGA_TARGET} PROPERTIES LINK_FLAGS "${HARDWARE_LINK_FLAGS} -reuse-exe=${CMAKE_BINARY_DIR}/${FPGA_TARGET}")
 # The -reuse-exe flag enables rapid recompilation of host-only code changes.

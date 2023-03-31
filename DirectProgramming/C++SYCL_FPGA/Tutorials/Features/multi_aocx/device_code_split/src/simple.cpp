@@ -1,5 +1,5 @@
-#include "test_config_selector.hpp"
 #include <sycl/sycl.hpp>
+#include <sycl/ext/intel/fpga_extensions.hpp>
 #include <iostream>
 
 using namespace sycl;
@@ -12,7 +12,15 @@ class SimpleMul;
 void kernel_vadd(const float a, const float b, float &c) {
 
   {
-    queue deviceQueue(testconfig_selector_v);
+#if FPGA_SIMULATOR
+    auto selector = sycl::ext::intel::fpga_simulator_selector_v;
+#elif FPGA_HARDWARE
+    auto selector = sycl::ext::intel::fpga_selector_v;
+#else // #if FPGA_EMULATOR
+    auto selector = sycl::ext::intel::fpga_emulator_selector_v;
+#endif
+
+    queue deviceQueue(selector);
     buffer<cl_float, 1> bufferA(&a, 1);
     buffer<cl_float, 1> bufferB(&b, 1);
     buffer<cl_float, 1> bufferC(&c, 1);
@@ -32,7 +40,15 @@ void kernel_vadd(const float a, const float b, float &c) {
 void kernel_vmul(const float a, const float b, float &c) {
 
   {
-    queue deviceQueue(testconfig_selector_v);
+#if FPGA_SIMULATOR
+    auto selector = sycl::ext::intel::fpga_simulator_selector_v;
+#elif FPGA_HARDWARE
+    auto selector = sycl::ext::intel::fpga_selector_v;
+#else // #if FPGA_EMULATOR
+    auto selector = sycl::ext::intel::fpga_emulator_selector_v;
+#endif
+
+    queue deviceQueue(selector);
     buffer<cl_float, 1> bufferA(&a, 1);
     buffer<cl_float, 1> bufferB(&b, 1);
     buffer<cl_float, 1> bufferC(&c, 1);
@@ -50,19 +66,20 @@ void kernel_vmul(const float a, const float b, float &c) {
 }
 
 int main() {
+
   float r1 = 0;
   float r2 = 0;
   kernel_vadd(0.1f, 0.2f, r1);
   kernel_vmul(0.3f, 0.4f, r2);
 
   if (r1 != 0.1f + 0.2f) {
-    std::cout << "RESULT: The results are incorrect !\n";
+    std::cout << "PASSED: The results are correct\n";
     return 1;
   }
   if (r2 != 0.3f * 0.4f) {
-    std::cout << "RESULT: The results are incorrect !\n";
+    std::cout << "PASSED: The results are correct\n";
     return 1;
   }
-  std::cout << "RESULT: The results are correct!\n";
+  std::cout << "PASSED: The results are correct\n";
   return 0;
 }
