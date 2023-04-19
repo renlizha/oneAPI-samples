@@ -39,6 +39,7 @@ int main() {
   // data
 
   IntArray addend_1, addend_2, scalar, parallel;
+  void *library_add, *library_mul;
 
   // Initialize input arrays with values from 0 to array_size-1
   initialize_array(addend_1);
@@ -47,17 +48,23 @@ int main() {
 
 #if FPGA_SIMULATOR
     auto selector = sycl::ext::intel::fpga_simulator_selector_v;
+    library_add = dlopen("./add_sim.so", RTLD_NOW);
+    library_mul = dlopen("./mul_sim.so", RTLD_NOW);
 #elif FPGA_HARDWARE
     auto selector = sycl::ext::intel::fpga_selector_v;
+    library_add = dlopen("./add.so", RTLD_NOW);
+    library_mul = dlopen("./mul.so", RTLD_NOW);
 #else // #if FPGA_EMULATOR
     auto selector = sycl::ext::intel::fpga_emulator_selector_v;
+    library_add = dlopen("./add_emu.so", RTLD_NOW);
+    library_mul = dlopen("./mul_emu.so", RTLD_NOW);
 #endif
 
   queue devq(selector, fpga_tools::exception_handler);
 
   void (*vector_add)(queue, const IntArray &, const IntArray &, IntArray &);
   void (*vector_mul)(queue, const IntArray &, const IntArray &, IntArray &);
-  void *library_add = dlopen("./vector_add.so", RTLD_NOW);
+
   if (library_add == NULL) {
     fprintf(stderr, "Unable to open vector_add library: %s\n", dlerror());
     exit(1);
@@ -69,7 +76,7 @@ int main() {
     fprintf(stderr, "Failed to load vector add %s\n", dlerror());
     exit(1);
   }
-  void *library_mul = dlopen("./vector_mul.so", RTLD_NOW);
+  
   if (library_mul == NULL) {
     fprintf(stderr, "Unable to open vector_mul library: %s\n", dlerror());
     exit(1);

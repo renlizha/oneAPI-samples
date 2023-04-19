@@ -20,27 +20,36 @@ This FPGA tutorial demonstrates the -fsycl-device-code-split=per_source|per_kern
 > When using the hardware compile flow, Intel® Quartus® Prime Pro Edition must be installed and accessible through your PATH.
 
 ## Purpose
+The purpose of this tutorial is to describe the `-fsycl-device-code-split` flag and to show how it can be leveraged to break down the compilation of several kernels across different files into smaller individual compiles. 
 
-`-fsycl-device-code-split=[per_kernel|per_source]` flag could be used when a design doesn't fit a single FPGA, so user must split it into multiple smaller images.
+The tutorial will also include `-reuse-exe=<exe>` flag and shows how it can enable rapid recompilation of host-only code changes
 
-### Simple Code Example
+### Using the flag
 
+`-fsycl-device-code-split=[per_kernel|per_source]` specifies how the device code in the input set of source files will be structured for compilation.
+
+- It splits a large design into smaller images
+  - `per_kernel` - a separate device code module is created for each SYCL kernel
+  - `per_source` - a separate device code module is created for each source
+- Users do not need to manually restructure their code or source files to get smaller hardware image files. This flag allows the compiler to do so automatically. 
+- When using the `-fsycl-device-code-split`, all kernels will be recompiled if any code or the target is changed unless we use the `-reuse-exe` flag (described below) to specify to the compiler which hardware images can be reused.
+
+`-reuse-exe=<exe>` re-uses the device binary embedded within the previously compiled SYCL binary <exe>
+
+- It speeds up FPGA aoc compile if the decie code in <exe> is unchanged
+- It can minimize or avoid long Quartus compile times for FPGA targets
+- This only works when the device code is unchanged
+
+using the flags together:
 ```
 icpx ... simple.cpp -o simple.exe -fsycl-device-code-split=per_kernel
+...
 icpx ... -reuse-exe=simple.exe -Xsv
 ```
 
-### Using the device_code_split
-
-- Split a large design into smaller images
-  - `per_kernel` - a separate device code module is created for each SYCL kernel
-  - `per_source` - a separate device code module is created for each source
-- Users don't need to restructure their code 
-- All aocxs need to be recompiled if any code or target changed
-
 ## Key Concepts
-
-
+- Using the `-fsycl-device-code-split=[per_kernel|per_source]` flag allows the compiler to split a larger design into smaller hardware images automatically, saving users' time from manual restructure.
+- If the device code and options affecting the device have not changed since the previous compilation, passing the `-reuse-exe=<exe_name>` flag instructs the compiler to extract the compiled FPGA binary from the existing executable and package it into the new executable, saving the device compilation time.
 
 ## Building the `device_code_split` Tutorial
 

@@ -21,9 +21,16 @@ This FPGA tutorial demonstrates the device load flow
 
 ## Purpose
 
-`dynamic_load` could be used to dynamically load only the libaries that's needed instead of all.
+The purpose of this tutorial is to describe the `dynamic_load` and to show how it can be used to dynamically load only the libaries that's needed instead of all.
 
-### Simple Code Example
+### Using the dynamic_load flow
+
+`dynamic_load` flow allows you to create shared libraries for the kernels and loads only the desired libraries at runtime, therefore generates a smaller binary than `dynamic_link`.
+
+- Like dynamic_link BUT Load the shared lib with dlopen in host code to access
+- Only loaded libraries are in memory
+- Recommended for designs with many aocxs
+- Cumbersome extra steps to load libraries, functions and handle name mangling
 
 ```
 icpx ... -fPIC -c vector_mul.cpp -o mul.o
@@ -33,17 +40,8 @@ icpx ... -fPIC -shared add.o -o add.so
 icpx ... main.cpp -o main.exe
 ```
 
-### Using the multi-aocx flows
-
-`dynamic_load`:
-- Like dynamic_link BUT Load the shared lib with dlopen in host code to access
-- Only loaded libraries are in memory
-- Recommended for designs with many aocxs
-
-
 ## Key Concepts
-
-
+The `dynamic_link` flow method requires the user to separate the host and device code into separate files. Only the loaded libraries are in memory, but requires extra steps to load, therefore only recommended for design with many aocxs.
 
 ## Building the `dynamic_load` Tutorial
 

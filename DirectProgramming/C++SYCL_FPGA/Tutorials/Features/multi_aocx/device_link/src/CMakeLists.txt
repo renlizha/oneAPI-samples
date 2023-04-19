@@ -1,7 +1,7 @@
 set(SOURCE_FILE_ADD vector_add.cpp)
 set(SOURCE_FILE_MUL vector_mul.cpp)
 set(SOURCE_FILE_MAIN main.cpp)
-set(TARGET_NAME main)
+set(TARGET_NAME device_link)
 set(EMULATOR_TARGET ${TARGET_NAME}.fpga_emu)
 set(SIMULATOR_TARGET ${TARGET_NAME}.fpga_sim)
 set(FPGA_TARGET ${TARGET_NAME}.fpga)
@@ -29,6 +29,21 @@ set(HARDWARE_LINK_FLAGS "-fsycl -fintelfpga -Xshardware -Xstarget=${FPGA_DEVICE}
 set(LINK_FLAGS_IMAGE "-fsycl-link=image")
 # use cmake -D USER_HARDWARE_FLAGS=<flags> to set extra flags for FPGA backend compilation
 
+set(CMAKE_CXX_FLAGS_LIST "${CMAKE_CXX_FLAGS}")
+separate_arguments(CMAKE_CXX_FLAGS_LIST)
+set(EMULATOR_COMPILE_FLAGS_LIST "${EMULATOR_COMPILE_FLAGS}")
+separate_arguments(EMULATOR_COMPILE_FLAGS_LIST)
+set(EMULATOR_LINK_FLAGS_LIST "${EMULATOR_LINK_FLAGS}")
+separate_arguments(EMULATOR_LINK_FLAGS_LIST)
+set(SIMULATOR_COMPILE_FLAGS_LIST "${SIMULATOR_COMPILE_FLAGS}")
+separate_arguments(SIMULATOR_COMPILE_FLAGS_LIST)
+set(SIMULATOR_LINK_FLAGS_LIST "${SIMULATOR_LINK_FLAGS}")
+separate_arguments(SIMULATOR_LINK_FLAGS_LIST)
+set(HARDWARE_COMPILE_FLAGS_LIST "${HARDWARE_COMPILE_FLAGS}")
+separate_arguments(HARDWARE_COMPILE_FLAGS_LIST)
+set(HARDWARE_LINK_FLAGS_LIST "${HARDWARE_LINK_FLAGS}")
+separate_arguments(HARDWARE_LINK_FLAGS_LIST)
+
 ###############################################################################
 ### FPGA Emulator
 ###############################################################################
@@ -39,37 +54,55 @@ set(LINK_FLAGS_IMAGE "-fsycl-link=image")
 #    [link] icpx -fsycl -fintelfpga -DFPGA_EMULATOR -fsycl-link=image vector_mul.o -o mul.a
 #    [compile] icpx -fsycl -fintelfpga -DFPGA_EMULATOR -o main.cpp.o -c main.cpp
 #    [link]    icpx -fsycl -fintelfpga main.cpp.o mul.a add.a -o main.fpga_emu
-add_library(library_add STATIC ${SOURCE_FILE_ADD})
-add_library(library_mul STATIC ${SOURCE_FILE_MUL})
-set_target_properties(library_add PROPERTIES COMPILE_FLAGS "${EMULATOR_COMPILE_FLAGS}")
-set_target_properties(library_add PROPERTIES LINK_FLAGS "${EMULATOR_LINK_FLAGS} ${LINK_FLAGS_IMAGE}")
-set_target_properties(library_mul PROPERTIES COMPILE_FLAGS "${EMULATOR_COMPILE_FLAGS}")
-set_target_properties(library_mul PROPERTIES LINK_FLAGS "${EMULATOR_LINK_FLAGS} ${LINK_FLAGS_IMAGE}")
-add_executable(${EMULATOR_TARGET} ${SOURCE_FILE_MAIN})
-target_include_directories(${EMULATOR_TARGET} PRIVATE ../../../../../include)
-set_target_properties(${EMULATOR_TARGET} PROPERTIES COMPILE_FLAGS "${EMULATOR_COMPILE_FLAGS}")
-set_target_properties(${EMULATOR_TARGET} PROPERTIES LINK_FLAGS "${EMULATOR_LINK_FLAGS}")
-target_link_libraries(${EMULATOR_TARGET} library_add library_mul)
 add_custom_target(fpga_emu DEPENDS ${EMULATOR_TARGET})
+set(MAIN_OBJ_EMU main_emu.o)
+set(ADD_IMAGE_EMU add_emu.a)
+set(MUL_IMAGE_EMU mul_emu.a)
+
+add_custom_command(OUTPUT ${MAIN_OBJ_EMU}
+                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${EMULATOR_COMPILE_FLAGS_LIST} -c ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE_MAIN} -o ${MAIN_OBJ_EMU} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
+                DEPENDS ${SOURCE_FILE_MAIN})
+
+add_custom_command(OUTPUT ${ADD_IMAGE_EMU}
+                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${EMULATOR_LINK_FLAGS_LIST} ${LINK_FLAGS_IMAGE} ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE_ADD} -o ${ADD_IMAGE_EMU} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
+                DEPENDS ${SOURCE_FILE_ADD})
+
+add_custom_command(OUTPUT ${MUL_IMAGE_EMU}
+                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${EMULATOR_LINK_FLAGS_LIST} ${LINK_FLAGS_IMAGE} ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE_MUL} -o ${MUL_IMAGE_EMU} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
+                DEPENDS ${SOURCE_FILE_MUL})
+
+add_custom_command(OUTPUT ${EMULATOR_TARGET}
+                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} -fsycl -fintelfpga ${MAIN_OBJ_EMU} ${ADD_IMAGE_EMU} ${MUL_IMAGE_EMU} -o ${CMAKE_BINARY_DIR}/${EMULATOR_TARGET} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
+                DEPENDS ${MAIN_OBJ_EMU} ${ADD_IMAGE_EMU} ${MUL_IMAGE_EMU})
 
 ###############################################################################
 ### Generate Report
 ###############################################################################
 # To compile manually:
 #   icpx -fsycl -fintelfpga -Xshardware -Xstarget=<FPGA_DEVICE> -fsycl-link=early main.cpp mul.a add.a -o device_link_report.a
+#   fsycl-link=early stops the compiler after RTL generation, before invoking Quartus®
 set(FPGA_EARLY_IMAGE ${TARGET_NAME}_report.a)
 # The compile output is not an executable, but an intermediate compilation result unique to SYCL.
-set_target_properties(library_add PROPERTIES COMPILE_FLAGS "${HARDWARE_COMPILE_FLAGS}")
-set_target_properties(library_add PROPERTIES LINK_FLAGS "${HARDWARE_LINK_FLAGS} ${LINK_FLAGS_IMAGE}")
-set_target_properties(library_mul PROPERTIES COMPILE_FLAGS "${HARDWARE_COMPILE_FLAGS}")
-set_target_properties(library_mul PROPERTIES LINK_FLAGS "${HARDWARE_LINK_FLAGS} ${LINK_FLAGS_IMAGE}")
-add_executable(${FPGA_EARLY_IMAGE} ${SOURCE_FILE_MAIN})
-target_include_directories(${FPGA_EARLY_IMAGE} PRIVATE ../../../../../include)
 add_custom_target(report DEPENDS ${FPGA_EARLY_IMAGE})
-set_target_properties(${FPGA_EARLY_IMAGE} PROPERTIES COMPILE_FLAGS "${HARDWARE_COMPILE_FLAGS}")
-set_target_properties(${FPGA_EARLY_IMAGE} PROPERTIES LINK_FLAGS "${HARDWARE_LINK_FLAGS} ${LINK_FLAGS_IMAGE}")
-# fsycl-link=early stops the compiler after RTL generation, before invoking Quartus®
-target_link_libraries(${FPGA_EARLY_IMAGE} library_add library_mul)
+set(MAIN_REPORT main_report.o)
+set(ADD_IMAGE_REPORT add_report.a)
+set(MUL_IMAGE_REPORT mul_report.a)
+
+add_custom_command(OUTPUT ${MAIN_REPORT}
+                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${HARDWARE_COMPILE_FLAGS_LIST} -c ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE_MAIN} -o ${MAIN_REPORT} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
+                DEPENDS ${SOURCE_FILE_MAIN})
+
+add_custom_command(OUTPUT ${ADD_IMAGE_REPORT}
+                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${HARDWARE_LINK_FLAGS_LIST} ${LINK_FLAGS_IMAGE} ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE_ADD} -o ${ADD_IMAGE_REPORT} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
+                DEPENDS ${SOURCE_FILE_ADD})
+
+add_custom_command(OUTPUT ${MUL_IMAGE_REPORT}
+                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${HARDWARE_LINK_FLAGS_LIST} ${LINK_FLAGS_IMAGE} ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE_MUL} -o ${MUL_IMAGE_REPORT} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
+                DEPENDS ${SOURCE_FILE_MUL})
+
+add_custom_command(OUTPUT ${FPGA_EARLY_IMAGE}
+                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS} -fsycl -fintelfpga -fsycl-link=early ${MAIN_REPORT} ${ADD_IMAGE_REPORT} ${MUL_IMAGE_REPORT} -o ${CMAKE_BINARY_DIR}/${FPGA_EARLY_IMAGE} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
+                DEPENDS ${MAIN_REPORT} ${ADD_IMAGE_REPORT} ${MUL_IMAGE_REPORT})
 
 ###############################################################################
 ### FPGA Simulator
@@ -81,17 +114,26 @@ target_link_libraries(${FPGA_EARLY_IMAGE} library_add library_mul)
 #    [link] icpx -fsycl -fintelfpga -Xssimulation -Xsghdl -Xstarget=<FPGA_DEVICE> -fsycl-link=image vector_mul.o -o mul.a
 #    [compile] icpx -fsycl -fintelfpga -DFPGA_SIMULATOR -o main.cpp.o -c main.cpp
 #    [link]    icpx -fsycl -fintelfpga -Xssimulation -Xsghdl -Xstarget=<FPGA_DEVICE> main.cpp.o mul.a add.a -o main.fpga_emu
-set_target_properties(library_add PROPERTIES COMPILE_FLAGS "${SIMULATOR_COMPILE_FLAGS}")
-set_target_properties(library_add PROPERTIES LINK_FLAGS "${SIMULATOR_LINK_FLAGS} ${LINK_FLAGS_IMAGE}")
-set_target_properties(library_mul PROPERTIES COMPILE_FLAGS "${SIMULATOR_COMPILE_FLAGS}")
-set_target_properties(library_mul PROPERTIES LINK_FLAGS "${SIMULATOR_LINK_FLAGS} ${LINK_FLAGS_IMAGE}")
-add_executable(${SIMULATOR_TARGET} ${SOURCE_FILE_MAIN})
-target_include_directories(${SIMULATOR_TARGET} PRIVATE ../../../../../include)
-set_target_properties(${SIMULATOR_TARGET} PROPERTIES COMPILE_FLAGS "${SIMULATOR_COMPILE_FLAGS}")
-set_target_properties(${SIMULATOR_TARGET} PROPERTIES LINK_FLAGS "${SIMULATOR_LINK_FLAGS} -reuse-exe=${CMAKE_BINARY_DIR}/${SIMULATOR_TARGET}")
-# The -reuse-exe flag enables rapid recompilation of host-only code changes.
-target_link_libraries(${SIMULATOR_TARGET} library_add library_mul)
 add_custom_target(fpga_sim DEPENDS ${SIMULATOR_TARGET})
+set(MAIN_OBJ_SIM main_sim.o)
+set(ADD_IMAGE_SIM add_sim.a)
+set(MUL_IMAGE_SIM mul_sim.a)
+
+add_custom_command(OUTPUT ${MAIN_OBJ_SIM}
+                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${SIMULATOR_COMPILE_FLAGS_LIST} -c ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE_MAIN} -o ${MAIN_OBJ_SIM} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
+                DEPENDS ${SOURCE_FILE_MAIN})
+
+add_custom_command(OUTPUT ${ADD_IMAGE_SIM}
+                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${SIMULATOR_LINK_FLAGS_LIST} ${LINK_FLAGS_IMAGE} ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE_ADD} -o ${ADD_IMAGE_SIM} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
+                DEPENDS ${SOURCE_FILE_ADD})
+
+add_custom_command(OUTPUT ${MUL_IMAGE_SIM}
+                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${SIMULATOR_LINK_FLAGS_LIST} ${LINK_FLAGS_IMAGE} ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE_MUL} -o ${MUL_IMAGE_SIM} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
+                DEPENDS ${SOURCE_FILE_MUL})
+
+add_custom_command(OUTPUT ${SIMULATOR_TARGET}
+                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS} -fsycl -fintelfpga ${MAIN_OBJ_SIM} ${ADD_IMAGE_SIM} ${MUL_IMAGE_SIM} -o ${CMAKE_BINARY_DIR}/${SIMULATOR_TARGET} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
+                DEPENDS ${MAIN_OBJ_SIM} ${ADD_IMAGE_SIM} ${MUL_IMAGE_SIM})
 
 
 ###############################################################################
@@ -104,14 +146,23 @@ add_custom_target(fpga_sim DEPENDS ${SIMULATOR_TARGET})
 #    [link] icpx -fsycl -fintelfpga -Xshardware -Xstarget=<FPGA_DEVICE> -fsycl-link=image vector_mul.o -o mul.a
 #    [compile] icpx -fsycl -fintelfpga -o main.cpp.o -c main.cpp
 #    [link]    icpx -fsycl -fintelfpga -Xshardware -Xstarget=<FPGA_DEVICE> main.cpp.o mul.a add.a -o main.fpga_emu
-set_target_properties(library_add PROPERTIES COMPILE_FLAGS "${HARDWARE_COMPILE_FLAGS}")
-set_target_properties(library_add PROPERTIES LINK_FLAGS "${HARDWARE_LINK_FLAGS} ${LINK_FLAGS_IMAGE}")
-set_target_properties(library_mul PROPERTIES COMPILE_FLAGS "${HARDWARE_COMPILE_FLAGS}")
-set_target_properties(library_mul PROPERTIES LINK_FLAGS "${HARDWARE_LINK_FLAGS} ${LINK_FLAGS_IMAGE}")
-add_executable(${FPGA_TARGET} ${SOURCE_FILE_MAIN})
-target_include_directories(${FPGA_TARGET} PRIVATE ../../../../../include)
-set_target_properties(${FPGA_TARGET} PROPERTIES COMPILE_FLAGS "${HARDWARE_COMPILE_FLAGS}")
-set_target_properties(${FPGA_TARGET} PROPERTIES LINK_FLAGS "${HARDWARE_LINK_FLAGS} -reuse-exe=${CMAKE_BINARY_DIR}/${FPGA_TARGET}")
-# The -reuse-exe flag enables rapid recompilation of host-only code changes.
-target_link_libraries(${FPGA_TARGET} library_add library_mul)
 add_custom_target(fpga DEPENDS ${FPGA_TARGET})
+set(MAIN_OBJ main.o)
+set(ADD_IMAGE add.a)
+set(MUL_IMAGE mul.a)
+
+add_custom_command(OUTPUT ${MAIN_OBJ}
+                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${HARDWARE_COMPILE_FLAGS_LIST} -c ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE_MAIN} -o ${MAIN_OBJ} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
+                DEPENDS ${SOURCE_FILE_MAIN})
+
+add_custom_command(OUTPUT ${ADD_IMAGE}
+                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${HARDWARE_LINK_FLAGS_LIST} ${LINK_FLAGS_IMAGE} ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE_ADD} -o ${ADD_IMAGE} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
+                DEPENDS ${SOURCE_FILE_ADD})
+
+add_custom_command(OUTPUT ${MUL_IMAGE}
+                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${HARDWARE_LINK_FLAGS_LIST} ${LINK_FLAGS_IMAGE} ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE_MUL} -o ${MUL_IMAGE} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
+                DEPENDS ${SOURCE_FILE_MUL})
+
+add_custom_command(OUTPUT ${FPGA_TARGET}
+                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS} -fsycl -fintelfpga ${MAIN_OBJ} ${ADD_IMAGE} ${MUL_IMAGE} -o ${CMAKE_BINARY_DIR}/${FPGA_TARGET} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
+                DEPENDS ${MAIN_OBJ} ${ADD_IMAGE} ${MUL_IMAGE})

@@ -21,9 +21,16 @@ This FPGA tutorial demonstrates the dynamic_link flow
 
 ## Purpose
 
-`dynamic_link` could be used to load all libraries at runtime therefore generates smaller binary.
+The purpose of this tutorial is to describe the `dynamic_link` flow and to show how it can be used to load all libraries at runtime therefore generating smaller binary.
 
-### Simple Code Example
+### Using the dynamic_link flow
+
+`dynamic_link` flow allows you to create shared libraries for the kernels and loads all libraries at runtime.
+
+- Only libraries that changed needs to be recompiled
+- Loads all libraries at runtime therefore generates a smaller binary
+- All libraries are loaded to memory therefore not scalable
+- Recommended for smaller designs with few aocxs
 
 ```
 icpx ... -fPIC -c vector_mul.cpp -o mul.o
@@ -33,18 +40,10 @@ icpx ... -fPIC -shared add.o -o add.so
 icpx ... main.cpp mul.so add.so -o main.exe
 ```
 
-### Using the multi-aocx flows
-
-- Only libraries that changed needs to be recompiled
-- Loads all libraries at runtime therefore generates a smaller binary
-- All libraries are loaded to memory therefore not scalable
-- Recommended for smaller designs with few aocxs
-
 ## Key Concepts
+The `dynamic_link` flow method requires the user to separate the host and device code into separate files. It creates shared libraries for each device code file and loads all libraries to the memory, only recommended for small design with few aocxs.
 
-
-
-## Building the `device_link` Tutorial
+## Building the `dynamic_link` Tutorial
 
 > **Note**: If you have not already done so, set up your CLI
 > environment by sourcing  the `setvars` script located in
@@ -140,7 +139,7 @@ To learn more about the extensions and how to configure the oneAPI environment, 
      make fpga
      ```
 
-3. (Optional) As the earlier hardware compile can take several hours to complete, FPGA precompiled binaries (compatible with Ubuntu 18.04) can be downloaded [here](https://iotdk.intel.com/fpga-precompiled-binaries/latest/device_link.fpga.tar.gz).
+3. (Optional) As the earlier hardware compile can take several hours to complete, FPGA precompiled binaries (compatible with Ubuntu 18.04) can be downloaded [here](https://iotdk.intel.com/fpga-precompiled-binaries/latest/dynamic_link.fpga.tar.gz).
 
 ### On a Windows* System
 
@@ -208,30 +207,30 @@ For instructions, refer to [FPGA Workflows on Third-Party IDEs for Intel&reg; on
 
 Locate the pair of `report.html` files in either:
 
-- **Report-only compile**:  `device_link_report.prj`
-- **FPGA hardware compile**: `device_link.prj`
+- **Report-only compile**:  `dynamic_link_report.prj`
+- **FPGA hardware compile**: `dynamic_link.prj`
 
 ## Running the Sample
 
 1. Run the sample on the FPGA emulator (the kernel executes on the CPU):
 
    ```bash
-   ./device_link.fpga_emu    (Linux)
-   device_link.fpga_emu.exe  (Windows)
+   ./dynamic_link.fpga_emu    (Linux)
+   dynamic_link.fpga_emu.exe  (Windows)
    ```
 
 2. Run the sample of the FPGA simulator device
 
    ```bash
-   ./device_link.fpga_sim        (Linux)
-   device_link.fpga_sim.exe      (Windows)
+   ./dynamic_link.fpga_sim        (Linux)
+   dynamic_link.fpga_sim.exe      (Windows)
    ```
 
 3. Run the sample on the FPGA device
 
    ```bash
-   ./device_link.fpga             (Linux)
-   device_link.fpga.exe           (Windows)
+   ./dynamic_link.fpga             (Linux)
+   dynamic_link.fpga.exe           (Windows)
    ```
 
 ### Example of Output on Emulator

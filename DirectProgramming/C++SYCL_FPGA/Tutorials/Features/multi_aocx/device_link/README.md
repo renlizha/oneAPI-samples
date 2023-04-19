@@ -21,26 +21,23 @@ This FPGA tutorial demonstrates the device link flow
 
 ## Purpose
 
-`device_link` could be used to parallelize the individual compiles when users don't need to restructure their code. 
+The purpose of this tutorial is to describe the `device_link` flow and to show how it can be used to parallelize the individual compiles when users don't need to restructure their code. 
 
-### Simple Code Example
-
-```
-icpx ... vector_mul.cpp -fsycl-link=image -o mul.a
-icpx ... vector_add.cpp -fsycl-link=image -o add.a
-icpx ... main.cpp mul.a add.a -o main.exe
-```
-
-### Using the device_link flows
+### Using the `device_link` flow
+`device_link` flow compile each hardware image separately and links all compiled images into a single fat binary.
 
 - Only cpp (aocx) file that changed needs to be recompiled
 - Change to one cpp file requires recompile of executable
 - All aocxs are embedded in single executable binary, therefore not scalable
 - Recommended for small designs with few aocxs
 
+```
+icpx ... vector_mul.cpp -fsycl-link=image -o mul.a
+icpx ... vector_add.cpp -fsycl-link=image -o add.a
+icpx ... main.cpp mul.a add.a -o main.exe
+```
 ## Key Concepts
-
-
+The `device_link` flow method requires the user to separate the host and device code into separate files. When a code change only applies to host-only files, an FPGA device image is not regenerated, avoiding long compile time for your FPGA device.
 
 ## Building the `device_link` Tutorial
 
