@@ -62,7 +62,7 @@ set_target_properties(${FPGA_EARLY_IMAGE} PROPERTIES LINK_FLAGS "${HARDWARE_LINK
 add_executable(${SIMULATOR_TARGET} ${SOURCE_FILE})
 target_include_directories(${SIMULATOR_TARGET} PRIVATE ../../../../../include)
 set_target_properties(${SIMULATOR_TARGET} PROPERTIES COMPILE_FLAGS "${SIMULATOR_COMPILE_FLAGS}")
-set_target_properties(${SIMULATOR_TARGET} PROPERTIES LINK_FLAGS "${SIMULATOR_LINK_FLAGS} -reuse-exe=${SOURCE_FILE}")
+set_target_properties(${SIMULATOR_TARGET} PROPERTIES LINK_FLAGS "${SIMULATOR_LINK_FLAGS} -reuse-exe=${CMAKE_BINARY_DIR}/${EMULATOR_TARGET}")
 # The -reuse-exe flag enables rapid recompilation of host-only code changes.
 add_custom_target(fpga_sim DEPENDS ${SIMULATOR_TARGET})
 
@@ -76,6 +76,6 @@ add_custom_target(fpga_sim DEPENDS ${SIMULATOR_TARGET})
 add_executable(${FPGA_TARGET} ${SOURCE_FILE})
 target_include_directories(${FPGA_TARGET} PRIVATE ../../../../../include)
 set_target_properties(${FPGA_TARGET} PROPERTIES COMPILE_FLAGS "${HARDWARE_COMPILE_FLAGS}")
-set_target_properties(${FPGA_TARGET} PROPERTIES LINK_FLAGS "${HARDWARE_LINK_FLAGS} -reuse-exe=${SOURCE_FILE}")
+set_target_properties(${FPGA_TARGET} PROPERTIES LINK_FLAGS "${HARDWARE_LINK_FLAGS} -reuse-exe=${CMAKE_BINARY_DIR}/${EMULATOR_TARGET}")
 # The -reuse-exe flag enables rapid recompilation of host-only code changes.
 add_custom_target(fpga DEPENDS ${FPGA_TARGET})

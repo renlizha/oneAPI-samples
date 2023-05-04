@@ -27,10 +27,10 @@ The purpose of this tutorial is to describe the `dynamic_link` flow and to show 
 
 `dynamic_link` flow allows you to create shared libraries for the kernels and loads all libraries at runtime.
 
-- Only libraries that changed needs to be recompiled
-- Loads all libraries at runtime therefore generates a smaller binary
-- All libraries are loaded to memory therefore not scalable
-- Recommended for smaller designs with few aocxs
+- Only libraries that changed needs to be recompiled.
+- It creates shared libraries for each device code file and loads all libraries at runtime, therefore generates a smaller binary.
+- All libraries are loaded to memory therefore not scalable.
+- It is recommended for smaller designs with few aocxs.
 
 ```
 icpx ... -fPIC -c vector_mul.cpp -o mul.o
@@ -41,7 +41,7 @@ icpx ... main.cpp mul.so add.so -o main.exe
 ```
 
 ## Key Concepts
-The `dynamic_link` flow method requires the user to separate the host and device code into separate files. It creates shared libraries for each device code file and loads all libraries to the memory, only recommended for small design with few aocxs.
+The `dynamic link` flow method requires the user to separate the host and device code into separate files. It creates shared libraries for each device code file and loads all libraries to the memory, only recommended for small design with few aocxs.
 
 ## Building the `dynamic_link` Tutorial
 

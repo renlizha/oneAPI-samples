@@ -39,7 +39,7 @@ void VectorMulInDPCPP(queue q, const IntArray &addend_1,
     //    work item. the parameter of the lambda is the work item id of the
     //    current item.
     // DPC++ supports unnamed lambda kernel by default.
-    h.parallel_for<class SimpleVmul>(num_items, [=](id<1> i) {
+    h.parallel_for<SimpleVmul>(num_items, [=](id<1> i) {
       mul_accessor[i] += addend_1_accessor[i] * addend_2_accessor[i];
     });
   });

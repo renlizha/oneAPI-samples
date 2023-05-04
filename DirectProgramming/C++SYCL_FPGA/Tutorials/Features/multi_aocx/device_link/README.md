@@ -26,10 +26,11 @@ The purpose of this tutorial is to describe the `device_link` flow and to show h
 ### Using the `device_link` flow
 `device_link` flow compile each hardware image separately and links all compiled images into a single fat binary.
 
-- Only cpp (aocx) file that changed needs to be recompiled
-- Change to one cpp file requires recompile of executable
-- All aocxs are embedded in single executable binary, therefore not scalable
-- Recommended for small designs with few aocxs
+- Only the source file that changed needs to be recompiled to generate the FPGA image.
+- The FPGA compilation of different source files can be done in parallel.
+- Changes to any source file requires recompilation of the final executable object file.
+- All FPGA images (aocxs) are embedded in a single executable binary, therefore the flow does not scale very well with large number of aocxs.
+- It is recommended for small designs with few aocxs.
 
 ```
 icpx ... vector_mul.cpp -fsycl-link=image -o mul.a
@@ -37,7 +38,7 @@ icpx ... vector_add.cpp -fsycl-link=image -o add.a
 icpx ... main.cpp mul.a add.a -o main.exe
 ```
 ## Key Concepts
-The `device_link` flow method requires the user to separate the host and device code into separate files. When a code change only applies to host-only files, an FPGA device image is not regenerated, avoiding long compile time for your FPGA device.
+The 'device link' flow requires the user to separate the host and device code into separate files. When a code change only applies to host-only files, an FPGA device image is not regenerated, avoiding long compile time for your FPGA device.
 
 ## Building the `device_link` Tutorial
 

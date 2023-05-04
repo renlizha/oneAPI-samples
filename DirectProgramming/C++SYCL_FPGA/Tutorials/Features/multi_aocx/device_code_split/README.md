@@ -20,31 +20,33 @@ This FPGA tutorial demonstrates the -fsycl-device-code-split=per_source|per_kern
 > When using the hardware compile flow, Intel® Quartus® Prime Pro Edition must be installed and accessible through your PATH.
 
 ## Purpose
-The purpose of this tutorial is to describe the `-fsycl-device-code-split` flag and to show how it can be leveraged to break down the compilation of several kernels across different files into smaller individual compiles. 
+The purpose of this tutorial is to describe the `-fsycl-device-code-split` flag and to show how it can be leveraged to break down the compilation of several kernels into smaller individual compiles.  
 
-The tutorial will also include `-reuse-exe=<exe>` flag and shows how it can enable rapid recompilation of host-only code changes
+The tutorial will also describe the `-reuse-exe=<exe>` flag and show how it can enable rapid recompilation of host-only code changes.
 
 ### Using the flag
 
 `-fsycl-device-code-split=[per_kernel|per_source]` specifies how the device code in the input set of source files will be structured for compilation.
 
-- It splits a large design into smaller images
-  - `per_kernel` - a separate device code module is created for each SYCL kernel
-  - `per_source` - a separate device code module is created for each source
+- It splits a large design into smaller images:
+  - `per_kernel` - a separate device code module is created for each SYCL kernel.
+  - `per_source` - a separate device code module is created for each source.
 - Users do not need to manually restructure their code or source files to get smaller hardware image files. This flag allows the compiler to do so automatically. 
-- When using the `-fsycl-device-code-split`, all kernels will be recompiled if any code or the target is changed unless we use the `-reuse-exe` flag (described below) to specify to the compiler which hardware images can be reused.
+- When using the `-fsycl-device-code-split` flag, all kernels will be recompiled if any code or the target is changed unless we use the `-reuse-exe` flag (described below) to specify to the compiler which hardware images can be reused.
 
-`-reuse-exe=<exe>` re-uses the device binary embedded within the previously compiled SYCL binary <exe>
+`-reuse-exe=<exe>` re-uses the device binary embedded within the previously compiled SYCL binary <exe>.
 
-- It speeds up FPGA aoc compile if the decie code in <exe> is unchanged
-- It can minimize or avoid long Quartus compile times for FPGA targets
-- This only works when the device code is unchanged
+- It speeds up the FPGA compilation step if the device code corresponding to `<exe>` is unchanged.
+- It can minimize or avoid long Quartus compile times for FPGA targets.
+- This only works when the device code is unchanged.
 
 using the flags together:
 ```
 icpx ... simple.cpp -o simple.exe -fsycl-device-code-split=per_kernel
-...
-icpx ... -reuse-exe=simple.exe -Xsv
+```
+The initial compilation generates an FPGA device image, which takes several hours. Now, make some changes to the host code.
+```
+icpx ... simple.cpp -o simple.exe -reuse-exe=simple.exe
 ```
 
 ## Key Concepts

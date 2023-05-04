@@ -27,10 +27,10 @@ The purpose of this tutorial is to describe the `dynamic_load` and to show how i
 
 `dynamic_load` flow allows you to create shared libraries for the kernels and loads only the desired libraries at runtime, therefore generates a smaller binary than `dynamic_link`.
 
-- Like dynamic_link BUT Load the shared lib with dlopen in host code to access
-- Only loaded libraries are in memory
-- Recommended for designs with many aocxs
-- Cumbersome extra steps to load libraries, functions and handle name mangling
+- It is similar to dynamic_link BUT Loads the shared lib with dlopen in host code to access.
+- Only loaded libraries are in memory therefore reducing memory usage.
+- However it requires cubersome extra steps to load libraries, functions and handle name mangling.
+- It is recommended for designs with many aocxs.
 
 ```
 icpx ... -fPIC -c vector_mul.cpp -o mul.o
@@ -41,7 +41,7 @@ icpx ... main.cpp -o main.exe
 ```
 
 ## Key Concepts
-The `dynamic_link` flow method requires the user to separate the host and device code into separate files. Only the loaded libraries are in memory, but requires extra steps to load, therefore only recommended for design with many aocxs.
+The `dynamic load` flow method requires the user to separate the host and device code into separate files. Only the loaded libraries are in memory, but requires extra steps to load, therefore only recommended for design with many aocxs.
 
 ## Building the `dynamic_load` Tutorial
 
