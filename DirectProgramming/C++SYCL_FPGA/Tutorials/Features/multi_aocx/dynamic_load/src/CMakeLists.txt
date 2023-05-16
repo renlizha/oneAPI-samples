@@ -124,7 +124,7 @@ add_custom_command(OUTPUT ${FPGA_EARLY_IMAGE}
 #    icpx -fsycl -fintelfpga -Xssimulation -Xsghdl -Xstarget=<FPGA_DEVICE> -fPIC -shared vector_add.o -o add.so
 #    icpx -fsycl -fintelfpga -DFPGA_SIMULATOR fPIC -o vector_mul.o -c vector_mul.cpp
 #    icpx -fsycl -fintelfpga -Xssimulation -Xsghdl -Xstarget=<FPGA_DEVICE> -fPIC -shared vector_mul.o -o mul.so
-#    icpx -fsycl -fintelfpga -Xssimulation -Xsghdl -Xstarget=<FPGA_DEVICE> main.cpp mul.so add.so -o main.fpga_emu
+#    icpx -fsycl -fintelfpga -Xssimulation -Xsghdl -Xstarget=<FPGA_DEVICE> main.cpp mul.so add.so -o main.fpga_sim
 add_custom_target(fpga_sim DEPENDS ${SIMULATOR_TARGET})
 set(ADD_OBJ_SIM add_sim.o)
 set(MUL_OBJ_SIM mul_sim.o)
@@ -160,7 +160,7 @@ add_custom_command(OUTPUT ${SIMULATOR_TARGET}
 #    icpx -fsycl -fintelfpga -Xshardware -Xstarget=<FPGA_DEVICE> -fPIC -shared vector_add.o -o add.so
 #    icpx -fsycl -fintelfpga -fPIC -o vector_mul.o -c vector_mul.cpp
 #    icpx -fsycl -fintelfpga -Xshardware -Xstarget=<FPGA_DEVICE> -fPIC -shared vector_mul.o -o mul.so
-#    icpx -fsycl -fintelfpga -Xshardware -Xstarget=<FPGA_DEVICE> main.cpp mul.so add.so -o main.fpga_emu
+#    icpx -fsycl -fintelfpga -Xshardware -Xstarget=<FPGA_DEVICE> main.cpp mul.so add.so -o main.fpga
 add_custom_target(fpga DEPENDS ${FPGA_TARGET})
 set(ADD_OBJ add.o)
 set(MUL_OBJ mul.o)

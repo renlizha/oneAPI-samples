@@ -51,7 +51,7 @@ separate_arguments(HARDWARE_LINK_FLAGS_LIST)
 #    icpx -fsycl -fintelfpga -fPIC -shared vector_add.o -o add.so
 #    icpx -fsycl -fintelfpga -fPIC -o vector_mul.o -c vector_mul.cpp
 #    icpx -fsycl -fintelfpga -fPIC -shared vector_mul.o -o mul.so
-#    icpx -fsycl main.cpp.o mul.so add.so -o main.fpga_emu
+#    icpx -fsycl main.cpp mul.so add.so -o main.fpga_emu
 add_custom_target(fpga_emu DEPENDS ${EMULATOR_TARGET})
 set(ADD_OBJ_EMU add_emu.o)
 set(MUL_OBJ_EMU mul_emu.o)
@@ -97,23 +97,23 @@ set(ADD_SHARED_REPORT add_report.so)
 set(MUL_SHARED_REPORT mul_report.so)
 
 add_custom_command(OUTPUT ${ADD_OBJ_REPORT}
-                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${EMULATOR_LINK_FLAGS_LIST} -c ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE_ADD} -o ${ADD_OBJ_REPORT} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
+                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${HARDWARE_COMPILE_FLAGS_LIST} -c ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE_ADD} -o ${ADD_OBJ_REPORT} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
                 DEPENDS ${SOURCE_FILE_ADD})
 
 add_custom_command(OUTPUT ${MUL_OBJ_REPORT}
-                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${EMULATOR_LINK_FLAGS_LIST} -c ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE_MUL} -o ${MUL_OBJ_REPORT} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
+                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${HARDWARE_COMPILE_FLAGS_LIST} -c ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE_MUL} -o ${MUL_OBJ_REPORT} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
                 DEPENDS ${SOURCE_FILE_MUL})
 
 add_custom_command(OUTPUT ${ADD_SHARED_REPORT}
-                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${EMULATOR_LINK_FLAGS_LIST} -shared ${ADD_OBJ_REPORT} -o ${CMAKE_BINARY_DIR}/${ADD_SHARED_REPORT} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
+                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${HARDWARE_LINK_FLAGS_LIST} -shared ${ADD_OBJ_REPORT} -o ${CMAKE_BINARY_DIR}/${ADD_SHARED_REPORT} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
                 DEPENDS ${ADD_OBJ_REPORT})
 
 add_custom_command(OUTPUT ${MUL_SHARED_REPORT}
-                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${EMULATOR_LINK_FLAGS_LIST} -shared ${MUL_OBJ_REPORT} -o ${CMAKE_BINARY_DIR}/${MUL_SHARED_REPORT} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
+                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${HARDWARE_LINK_FLAGS_LIST} -shared ${MUL_OBJ_REPORT} -o ${CMAKE_BINARY_DIR}/${MUL_SHARED_REPORT} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
                 DEPENDS ${MUL_OBJ_REPORT})
 
 add_custom_command(OUTPUT ${FPGA_EARLY_IMAGE}
-                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} -fsycl -DFPGA_EMULATOR ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE_MAIN} ${CMAKE_BINARY_DIR}/${ADD_SHARED_REPORT} ${CMAKE_BINARY_DIR}/${MUL_SHARED_REPORT} -o ${CMAKE_BINARY_DIR}/${FPGA_EARLY_IMAGE} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
+                COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} -fsycl -fsycl-link=early ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE_MAIN} ${CMAKE_BINARY_DIR}/${ADD_SHARED_REPORT} ${CMAKE_BINARY_DIR}/${MUL_SHARED_REPORT} -o ${CMAKE_BINARY_DIR}/${FPGA_EARLY_IMAGE} -I${CMAKE_CURRENT_LIST_DIR}/../../../../../include
                 DEPENDS ${SOURCE_FILE_MAIN} ${ADD_SHARED_REPORT} ${MUL_SHARED_REPORT})
 
 ###############################################################################

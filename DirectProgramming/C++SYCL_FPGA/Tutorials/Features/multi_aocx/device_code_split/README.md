@@ -32,7 +32,8 @@ The tutorial will also describe the `-reuse-exe=<exe>` flag and show how it can 
   - `per_kernel` - a separate device code module is created for each SYCL kernel.
   - `per_source` - a separate device code module is created for each source.
 - Users do not need to manually restructure their code or source files to get smaller hardware image files. This flag allows the compiler to do so automatically. 
-- When using the `-fsycl-device-code-split` flag, all kernels will be recompiled if any code or the target is changed unless we use the `-reuse-exe` flag (described below) to specify to the compiler which hardware images can be reused.
+- When using the `-fsycl-device-code-split` flag, all kernels will be recompiled if any code or the target is changed unless you use the `-reuse-exe` flag (described below) to specify to the compiler which hardware images can be reused.
+- The total compile time will likely be longer, but the main perk is if your image is getting too large to fit on the FPGA, this can be a nice way to split them.
 
 `-reuse-exe=<exe>` re-uses the device binary embedded within the previously compiled SYCL binary <exe>.
 
@@ -42,12 +43,9 @@ The tutorial will also describe the `-reuse-exe=<exe>` flag and show how it can 
 
 using the flags together:
 ```
-icpx ... simple.cpp -o simple.exe -fsycl-device-code-split=per_kernel
+icpx ... simple.cpp -o simple.exe -fsycl-device-code-split=per_kernel -reuse-exe=simple.exe
 ```
-The initial compilation generates an FPGA device image, which takes several hours. Now, make some changes to the host code.
-```
-icpx ... simple.cpp -o simple.exe -reuse-exe=simple.exe
-```
+If `simple.exe` does not exist, `-reuse-exe` is ignored and the FPGA device image is regenerated. This will always be the case the first time a project is compiled.
 
 ## Key Concepts
 - Using the `-fsycl-device-code-split=[per_kernel|per_source]` flag allows the compiler to split a larger design into smaller hardware images automatically, saving users' time from manual restructure.

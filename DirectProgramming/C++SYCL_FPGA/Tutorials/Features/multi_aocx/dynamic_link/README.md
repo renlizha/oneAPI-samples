@@ -21,7 +21,7 @@ This FPGA tutorial demonstrates the dynamic_link flow
 
 ## Purpose
 
-The purpose of this tutorial is to describe the `dynamic_link` flow and to show how it can be used to load all libraries at runtime therefore generating smaller binary.
+The purpose of this tutorial is to describe the `dynamic_link` flow and to show how it can be used to compile kernels into shared libraries that can be loaded at runtime. This can be useful in generating smaller binaries.
 
 ### Using the dynamic_link flow
 
@@ -29,8 +29,31 @@ The purpose of this tutorial is to describe the `dynamic_link` flow and to show 
 
 - Only libraries that changed needs to be recompiled.
 - It creates shared libraries for each device code file and loads all libraries at runtime, therefore generates a smaller binary.
+- The shared libraries can be also compiled ahead of time, so you could build a new program that links against existing shared libraries to minimize or avoid the Quartus compilation time.
 - All libraries are loaded to memory therefore not scalable.
 - It is recommended for smaller designs with few aocxs.
+
+`main.cpp`:
+```
+queue q;
+add(q);
+mul(q);
+
+```
+
+`vector_add.cpp`:
+```
+void add(queue q){
+  q.submit();
+}
+```
+
+`vector_mul.cpp`:
+```
+void mul(queue q){
+  q.submit();
+}
+```
 
 ```
 icpx ... -fPIC -c vector_mul.cpp -o mul.o
@@ -39,6 +62,7 @@ icpx ... -fPIC -c vector_add.cpp -o add.o
 icpx ... -fPIC -shared add.o -o add.so
 icpx ... main.cpp mul.so add.so -o main.exe
 ```
+Note: the `-fPIC` flag is used to generate Position Independent Code, which is a binary code for both static library and share library. It allows a shared library to statically link to zlib.
 
 ## Key Concepts
 The `dynamic link` flow method requires the user to separate the host and device code into separate files. It creates shared libraries for each device code file and loads all libraries to the memory, only recommended for small design with few aocxs.

@@ -21,7 +21,7 @@ This FPGA tutorial demonstrates the device load flow
 
 ## Purpose
 
-The purpose of this tutorial is to describe the `dynamic_load` and to show how it can be used to dynamically load only the libaries that's needed instead of all.
+The purpose of this tutorial is to describe the `dynamic_load` and to show how it can be used to compile kernels into shared libraries that can be loaded dynamically at runtime. This can be useful in generating small binaries, and only loading the relevant kernels into memory at runtime.
 
 ### Using the dynamic_load flow
 
@@ -32,6 +32,35 @@ The purpose of this tutorial is to describe the `dynamic_load` and to show how i
 - However it requires cubersome extra steps to load libraries, functions and handle name mangling.
 - It is recommended for designs with many aocxs.
 
+`main.cpp`:
+```
+queue q;
+add_lib = dlopen("./add.so", RTLD_NOW);
+add = dlsym(add_lib, “add");
+mul_lib = dlopen("./mul.so", RTLD_NOW);
+mul = dlsym(mul_lib, “mul");
+add(q);
+mul(q);
+```
+
+`vector_add.cpp`:
+```
+extern “C” {
+  void add(queue q) {
+    q.submit();
+  }
+}
+```
+
+`vector_mul.cpp`:
+```
+extern “C” {
+  void mul(queue q) {
+    q.submit();
+  }
+}
+```
+
 ```
 icpx ... -fPIC -c vector_mul.cpp -o mul.o
 icpx ... -fPIC -shared mul.o -o mul.so
@@ -39,9 +68,10 @@ icpx ... -fPIC -c vector_add.cpp -o add.o
 icpx ... -fPIC -shared add.o -o add.so
 icpx ... main.cpp -o main.exe
 ```
+Note: the `-fPIC` flag is used to generate Position Independent Code, which is a binary code for both static library and share library. It allows a shared library to statically link to zlib.
 
 ## Key Concepts
-The `dynamic load` flow method requires the user to separate the host and device code into separate files. Only the loaded libraries are in memory, but requires extra steps to load, therefore only recommended for design with many aocxs.
+The `dynamic load` flow method requires the user to separate the host and device code into separate files. You can choose dynamically at runtime which libraries to load and only the loaded libraries are in memory. However this requires extra steps to load, therefore only recommended for design with many aocxs.
 
 ## Building the `dynamic_load` Tutorial
 

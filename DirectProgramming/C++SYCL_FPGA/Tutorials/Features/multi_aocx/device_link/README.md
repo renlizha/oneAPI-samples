@@ -21,7 +21,7 @@ This FPGA tutorial demonstrates the device link flow
 
 ## Purpose
 
-The purpose of this tutorial is to describe the `device_link` flow and to show how it can be used to parallelize the individual compiles when users don't need to restructure their code. 
+The purpose of this tutorial is to describe the `device_link` flow and to show how it can be used to parallelize the individual compiles so users don't need to restructure their code. 
 
 ### Using the `device_link` flow
 `device_link` flow compile each hardware image separately and links all compiled images into a single fat binary.
