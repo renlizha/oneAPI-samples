@@ -10,7 +10,7 @@
 #include <iostream>
 
 #include "exception_handler.hpp"
-#include "vector_ops.h"
+#include "vector_ops.hpp"
 
 using namespace sycl;
 
@@ -48,16 +48,16 @@ int main() {
 
 #if FPGA_SIMULATOR
     auto selector = sycl::ext::intel::fpga_simulator_selector_v;
-    library_add = dlopen("./add_sim.so", RTLD_NOW);
-    library_mul = dlopen("./mul_sim.so", RTLD_NOW);
+    library_add = dlopen("../build/add_sim.so", RTLD_NOW);
+    library_mul = dlopen("../build/mul_sim.so", RTLD_NOW);
 #elif FPGA_HARDWARE
     auto selector = sycl::ext::intel::fpga_selector_v;
-    library_add = dlopen("./add.so", RTLD_NOW);
-    library_mul = dlopen("./mul.so", RTLD_NOW);
+    library_add = dlopen("../build/add.so", RTLD_NOW);
+    library_mul = dlopen("../build/mul.so", RTLD_NOW);
 #else // #if FPGA_EMULATOR
     auto selector = sycl::ext::intel::fpga_emulator_selector_v;
-    library_add = dlopen("./add_emu.so", RTLD_NOW);
-    library_mul = dlopen("./mul_emu.so", RTLD_NOW);
+    library_add = dlopen("../build/add_emu.so", RTLD_NOW);
+    library_mul = dlopen("../build/mul_emu.so", RTLD_NOW);
 #endif
 
   queue devq(selector, fpga_tools::exception_handler);

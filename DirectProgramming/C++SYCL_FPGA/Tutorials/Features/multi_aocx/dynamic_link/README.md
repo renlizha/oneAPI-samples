@@ -246,8 +246,8 @@ Locate the pair of `report.html` files in either:
 2. Run the sample of the FPGA simulator device
 
    ```bash
-   ./dynamic_link.fpga_sim        (Linux)
-   dynamic_link.fpga_sim.exe      (Windows)
+   export INTELFPGA_SIM_DEVICE_SPEC_DIR=add_sim.so.prj && CL_CONTEXT_MPSIM_DEVICE_INTELFPGA=1 ./dynamic_link.fpga_sim    (Linux)
+   export INTELFPGA_SIM_DEVICE_SPEC_DIR=add_sim.so.prj && CL_CONTEXT_MPSIM_DEVICE_INTELFPGA=1 ./dynamic_link.fpga_sim.exe  (Windows)
    ```
 
 3. Run the sample on the FPGA device
@@ -258,9 +258,12 @@ Locate the pair of `report.html` files in either:
    ```
 
 ### Example of Output on Emulator
+```
+PASSED: The results are correct
+```
 
 ### Discussion of Results
-
+`dynamic_link` flow compiles each device code file into shared libraries and loads all libraries at runtime.
 ## License
 
 Code samples are licensed under the MIT license. See [License.txt](https://github.com/oneapi-src/oneAPI-samples/blob/master/License.txt) for details.

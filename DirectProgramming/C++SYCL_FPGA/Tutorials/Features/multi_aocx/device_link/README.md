@@ -220,8 +220,8 @@ Locate the pair of `report.html` files in either:
 2. Run the sample of the FPGA simulator device
 
    ```bash
-   ./device_link.fpga_sim        (Linux)
-   device_link.fpga_sim.exe      (Windows)
+   export INTELFPGA_SIM_DEVICE_SPEC_DIR=add_sim.prj && CL_CONTEXT_MPSIM_DEVICE_INTELFPGA=1 ./device_link.fpga_sim    (Linux)
+   export INTELFPGA_SIM_DEVICE_SPEC_DIR=add_sim.prj && CL_CONTEXT_MPSIM_DEVICE_INTELFPGA=1 ./device_link.fpga_sim.exe  (Windows)
    ```
 
 3. Run the sample on the FPGA device
@@ -232,9 +232,20 @@ Locate the pair of `report.html` files in either:
    ```
 
 ### Example of Output on Emulator
+```
+PASSED: The results are correct
+```
 
 ### Discussion of Results
-
+Try modifying `vector_add.cpp` to have different implementation, you can replace parallel_for with single_task:
+```   
+h.single_task<SimpleVadd>([=] {
+  for (int i=0; i < array_size; i++) {
+    sum_accessor[i] = addend_1_accessor[i] + addend_2_accessor[i];
+  }
+});
+```
+Then, recompile only the `vector_add.cpp` via the device link method to see how quickly the design is recompiled.
 ## License
 
 Code samples are licensed under the MIT license. See [License.txt](https://github.com/oneapi-src/oneAPI-samples/blob/master/License.txt) for details.

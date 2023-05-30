@@ -1,4 +1,4 @@
-#include "vector_ops.h"
+#include "vector_ops.hpp"
 
 class SimpleVadd;
 using namespace sycl;

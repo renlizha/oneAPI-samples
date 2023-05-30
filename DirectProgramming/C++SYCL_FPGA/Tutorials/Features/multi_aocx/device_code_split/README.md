@@ -20,7 +20,7 @@ This FPGA tutorial demonstrates the -fsycl-device-code-split=per_source|per_kern
 > When using the hardware compile flow, Intel® Quartus® Prime Pro Edition must be installed and accessible through your PATH.
 
 ## Purpose
-The purpose of this tutorial is to describe the `-fsycl-device-code-split` flag and to show how it can be leveraged to break down the compilation of several kernels into smaller individual compiles.  
+The purpose of this tutorial is to describe the `-fsycl-device-code-split` flag and to show how it can be leveraged to break down the compilation of several kernels into smaller individual compiles.
 
 The tutorial will also describe the `-reuse-exe=<exe>` flag and show how it can enable rapid recompilation of host-only code changes.
 
@@ -232,8 +232,8 @@ Scroll down on the Summary page of the report and expand the section titled
 2. Run the sample of the FPGA simulator device
 
    ```bash
-   ./device_code_split.fpga_sim        (Linux)
-   device_code_split.fpga_sim.exe      (Windows)
+   CL_CONTEXT_MPSIM_DEVICE_INTELFPGA=1 ./device_code_split.fpga_sim    (Linux)
+   CL_CONTEXT_MPSIM_DEVICE_INTELFPGA=1 ./device_code_split.fpga_sim.exe  (Windows)
    ```
 
 3. Run the sample on the FPGA device
@@ -244,10 +244,13 @@ Scroll down on the Summary page of the report and expand the section titled
    ```
 
 ### Example of Output on Emulator
-
+```
+RESULT: The results are correct!
+```
 
 ### Discussion of Results
-
+Using the `-fsycl-device-code-split=[per_kernel|per_source]` flag allows the compiler to split a larger design into smaller hardware images automatically, saving users' time from manual restructure. 
+This tutorial shows an example of `-fsycl-device-code-split=per_kernel` where a separate device code module is created for each SYCL kernel. You can try using `-fsycl-device-code-split=per_source` where a separate device code module is created for each source.
 
 ## License
 

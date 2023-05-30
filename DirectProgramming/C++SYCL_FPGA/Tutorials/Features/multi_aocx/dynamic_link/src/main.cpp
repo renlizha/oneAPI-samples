@@ -9,7 +9,7 @@
 #include <iostream>
 
 #include "exception_handler.hpp"
-#include "vector_ops.h"
+#include "vector_ops.hpp"
 
 using namespace sycl;
 
